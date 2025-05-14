@@ -30,35 +30,42 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.get('/', (req, res) => {
-  // Check if repository is initialized
-  const isRepoInitialized = fs.existsSync(path.join(__dirname, '.git'));
-  
-  // Get list of blog posts if repository is initialized
+  let isRepoInitialized = false;
   let blogPosts = [];
-  if (isRepoInitialized && fs.existsSync(path.join(__dirname, 'posts'))) {
-    const postsDir = path.join(__dirname, 'posts');
-    blogPosts = fs.readdirSync(postsDir)
-      .filter(file => file.endsWith('.txt'))
-      .map(file => {
-        const filePath = path.join(postsDir, file);
-        const metadataPath = path.join(__dirname, 'metadata', file.replace('.txt', '.json'));
-        
-        let metadata = {};
-        if (fs.existsSync(metadataPath)) {
-          try {
-            metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-          } catch (error) {
-            console.error(`Error reading metadata for ${file}:`, error);
+  
+  try {
+    // Check if repository is initialized
+    isRepoInitialized = fs.existsSync(path.join(__dirname, '.git'));
+    
+    // Get list of blog posts if repository is initialized
+    if (isRepoInitialized && fs.existsSync(path.join(__dirname, 'posts'))) {
+      const postsDir = path.join(__dirname, 'posts');
+      blogPosts = fs.readdirSync(postsDir)
+        .filter(file => file.endsWith('.txt'))
+        .map(file => {
+          const filePath = path.join(postsDir, file);
+          const metadataPath = path.join(__dirname, 'metadata', file.replace('.txt', '.json'));
+          
+          let metadata = {};
+          if (fs.existsSync(metadataPath)) {
+            try {
+              metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+            } catch (error) {
+              console.error(`Error reading metadata for ${file}:`, error);
+            }
           }
-        }
-        
-        return {
-          filename: file,
-          title: metadata.title || file,
-          url: metadata.url || '',
-          date: metadata.date ? new Date(metadata.date).toLocaleString() : 'Unknown'
-        };
-      });
+          
+          return {
+            filename: file,
+            title: metadata.title || file,
+            url: metadata.url || '',
+            date: metadata.date ? new Date(metadata.date).toLocaleString() : 'Unknown'
+          };
+        });
+    }
+  } catch (error) {
+    console.error('Error in home route:', error);
+    // In case of error, continue with empty blog posts
   }
   
   res.render('index', { 
@@ -100,29 +107,34 @@ app.get('/view/:filename', (req, res) => {
   const { filename } = req.params;
   const filePath = path.join(__dirname, 'posts', filename);
   
-  if (!fs.existsSync(filePath)) {
-    return res.redirect('/?error=Blog post not found');
-  }
-  
-  const content = fs.readFileSync(filePath, 'utf8');
-  const metadataPath = path.join(__dirname, 'metadata', filename.replace('.txt', '.json'));
-  
-  let metadata = {};
-  if (fs.existsSync(metadataPath)) {
-    try {
-      metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-    } catch (error) {
-      console.error(`Error reading metadata for ${filename}:`, error);
+  try {
+    if (!fs.existsSync(filePath)) {
+      return res.redirect('/?error=Blog post not found');
     }
+    
+    const content = fs.readFileSync(filePath, 'utf8');
+    const metadataPath = path.join(__dirname, 'metadata', filename.replace('.txt', '.json'));
+    
+    let metadata = {};
+    if (fs.existsSync(metadataPath)) {
+      try {
+        metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+      } catch (error) {
+        console.error(`Error reading metadata for ${filename}:`, error);
+      }
+    }
+    
+    res.render('view', { 
+      content, 
+      metadata, 
+      filename,
+      message: req.query.message || '',
+      error: req.query.error || ''
+    });
+  } catch (error) {
+    console.error('Error in view route:', error);
+    return res.redirect(`/?error=${encodeURIComponent('Error viewing blog post: ' + error.message)}`);
   }
-  
-  res.render('view', { 
-    content, 
-    metadata, 
-    filename,
-    message: req.query.message || '',
-    error: req.query.error || ''
-  });
 });
 
 // Repository status
@@ -135,7 +147,23 @@ app.get('/status', async (req, res) => {
       error: req.query.error || ''
     });
   } catch (error) {
-    res.redirect(`/?error=${encodeURIComponent(error.message)}`);
+    console.error('Error in status route:', error);
+    // Provide a fallback status object in case of error
+    const fallbackStatus = {
+      branch: 'unknown',
+      isClean: false,
+      modified: [],
+      staged: [],
+      ahead: 0,
+      behind: 0,
+      error: error.message
+    };
+    
+    res.render('status', {
+      status: fallbackStatus,
+      message: '',
+      error: `Error getting repository status: ${error.message}`
+    });
   }
 });
 
