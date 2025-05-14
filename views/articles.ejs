@@ -1,0 +1,85 @@
+<%- include('partials/messages') %>
+
+<div class="card">
+  <h2 class="card-title">Article AI Generator Integration</h2>
+  
+  <div class="form-group">
+    <label for="apiKey">API Key:</label>
+    <input type="text" id="apiKey" name="apiKey" value="<%= apiKey || '' %>" placeholder="Enter your API key">
+    <button type="button" onclick="saveApiKey()" class="btn" style="background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">Save API Key</button>
+  </div>
+  
+  <% if (apiKey) { %>
+    <div class="api-status" style="margin-top: 15px;">
+      <% if (isConnected) { %>
+        <div class="alert alert-success">API connection successful!</div>
+      <% } else { %>
+        <div class="alert alert-danger">API connection failed. Please check your API key.</div>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<% if (apiKey && isConnected) { %>
+  <div class="card">
+    <h2 class="card-title">Available Articles</h2>
+    
+    <% if (articles && articles.length > 0) { %>
+      <ul class="blog-post-list">
+        <% articles.forEach(article => { %>
+          <li class="blog-post-item">
+            <h3 class="blog-post-title"><%= article.title || 'Untitled Article' %></h3>
+            <div class="blog-post-meta">
+              <div>ID: <%= article.id %></div>
+              <% if (article.createdAt) { %>
+                <div>Created: <%= new Date(article.createdAt).toLocaleString() %></div>
+              <% } %>
+            </div>
+            <div class="blog-post-actions">
+              <a href="/fetch-article/<%= article.id %>" class="btn" style="background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">Fetch Article</a>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+      
+      <div style="margin-top: 20px;">
+        <a href="/fetch-all" class="btn" style="background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block;">Fetch All Articles</a>
+      </div>
+    <% } else { %>
+      <p>No articles found.</p>
+    <% } %>
+  </div>
+<% } %>
+
+<div style="margin-top: 20px;">
+  <a href="/" class="btn" style="background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block;">&larr; Back to Home</a>
+</div>
+
+<script>
+  function saveApiKey() {
+    const apiKey = document.getElementById('apiKey').value;
+    if (!apiKey) {
+      alert('Please enter an API key');
+      return;
+    }
+    
+    fetch('/set-api-key', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ apiKey })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    })
+    .catch(error => {
+      alert('Error: ' + error.message);
+    });
+  }
+</script>

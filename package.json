@@ -1,0 +1,37 @@
+{
+  "name": "blog-to-git",
+  "version": "1.0.0",
+  "description": "A CLI tool to extract blog content and save it to a Git repository",
+  "main": "src/cli.js",
+  "bin": {
+    "blog-to-git": "./bin/blog-to-git.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "cli": "node ./bin/blog-to-git.js",
+    "init-repo": "node ./bin/blog-to-git.js init",
+    "add": "node ./bin/blog-to-git.js add",
+    "status": "node ./bin/blog-to-git.js status",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "blog",
+    "git",
+    "cli",
+    "scraper",
+    "replit"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
+    "cheerio": "^1.0.0",
+    "commander": "^13.1.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-ejs-layouts": "^2.5.1",
+    "sanitize-filename": "^1.6.3",
+    "simple-git": "^3.27.0"
+  }
+}

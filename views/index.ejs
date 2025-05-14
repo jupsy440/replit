@@ -1,0 +1,56 @@
+<%- include('partials/messages') %>
+
+<% if (!isRepoInitialized) { %>
+  <div class="card">
+    <h2 class="card-title">Initialize Repository</h2>
+    <p>Before adding blog posts, you need to initialize a Git repository.</p>
+    <form action="/init" method="POST">
+      <button type="submit">Initialize Repository</button>
+    </form>
+  </div>
+<% } else { %>
+  <div class="card">
+    <h2 class="card-title">Add Blog Post</h2>
+    <form action="/add" method="POST">
+      <div class="form-group">
+        <label for="url">Blog Post URL:</label>
+        <input type="url" id="url" name="url" placeholder="https://example.com/blog-post" required>
+      </div>
+      <button type="submit">Add Blog Post</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Blog Posts</h2>
+    <% if (blogPosts.length === 0) { %>
+      <p>No blog posts have been added yet.</p>
+    <% } else { %>
+      <ul class="blog-post-list">
+        <% blogPosts.forEach(post => { %>
+          <li class="blog-post-item">
+            <h3 class="blog-post-title"><%= post.title %></h3>
+            <div class="blog-post-meta">
+              <div>Source: <a href="<%= post.url %>" target="_blank"><%= post.url %></a></div>
+              <div>Added: <%= post.date %></div>
+            </div>
+            <div class="blog-post-actions">
+              <a href="/view/<%= post.filename %>" class="btn" style="background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">View Content</a>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Repository Management</h2>
+    <p>Use Git commands to commit and push changes to your repository.</p>
+    <a href="/status" class="btn" style="background-color: #6c757d; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">View Repository Status</a>
+  </div>
+  
+  <div class="card">
+    <h2 class="card-title">Article AI Generator</h2>
+    <p>Fetch articles from Article AI Generator and save them to your repository.</p>
+    <a href="/articles" class="btn" style="background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">Manage Articles</a>
+  </div>
+<% } %>
